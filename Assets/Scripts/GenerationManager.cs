@@ -3,30 +3,29 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using System.IO;
 using Random = UnityEngine.Random;
 
 public class GenerationManager : MonoBehaviour
 {
     [Header("Generators")]
     [SerializeField]
-    private GenerateObjectsInArea[] boxGenerators;
+    private GenerateObjectsInArea redAIGenerator;
     [SerializeField]
-    private GenerateObjectsInArea boatGenerator;
-    [SerializeField]
-    private GenerateObjectsInArea pirateGenerator;
+    private GenerateObjectsInArea blueAIGenerator;
 
     [Space(10)]
     [Header("Parenting and Mutation")]
     [SerializeField]
     private float mutationFactor;
-    [SerializeField] 
+    [SerializeField]
     private float mutationChance;
-    [SerializeField] 
+    [SerializeField]
     private int boatParentSize;
-    [SerializeField] 
+    [SerializeField]
     private int pirateParentSize;
 
-    [Space(10)] 
+    [Space(10)]
     [Header("Simulation Controls")]
     [SerializeField, Tooltip("Time per simulation (in seconds).")]
     private float simulationTimer;
@@ -37,26 +36,26 @@ public class GenerationManager : MonoBehaviour
     [SerializeField, Tooltip("Initial count for the simulation. Used for the Prefabs naming.")]
     private int generationCount;
 
-    [Space(10)] 
+    [Space(10)]
     [Header("Prefab Saving")]
     [SerializeField]
     private string savePrefabsAt;
-    
+
     /// <summary>
     /// Those variables are used mostly for debugging in the inspector.
     /// </summary>
     [Header("Former winners")]
     [SerializeField]
-    private AgentData lastBoatWinnerData;
+    private AIData lastBoatWinnerData;
     [SerializeField]
-    private AgentData lastPirateWinnerData;
+    private AIData lastPirateWinnerData;
 
     private bool _runningSimulation;
-    private List<BoatLogic> _activeBoats;
-    private List<PirateLogic> _activePirates;
-    private BoatLogic[] _boatParents;
-    private PirateLogic[] _pirateParents;
-    
+    private List<AISystem> _activeRedAI;
+    private List<AISystem> _activeBlueAI;
+    private AISystem[] _redAIParents;
+    private AISystem[] _blueAIParents;
+
     private void Start()
     {
         if (runOnStart)
@@ -64,7 +63,7 @@ public class GenerationManager : MonoBehaviour
             StartSimulation();
         }
     }
-    
+
     private void Update()
     {
         if (_runningSimulation)
@@ -75,169 +74,180 @@ public class GenerationManager : MonoBehaviour
                 ++generationCount;
                 MakeNewGeneration();
                 simulationCount = -Time.deltaTime;
-            } 
+            }
             simulationCount += Time.deltaTime;
         }
     }
 
-     
     /// <summary>
-    /// Generates the boxes on all box areas.
+    /// Generates boats and pirates using the parents list.
+    /// If no parents are used, then they are ignored and the boats/pirates are generated using the default prefab
+    /// specified in their areas.
     /// </summary>
-    public void GenerateBoxes()
+    /// <param name="boatParents"></param>
+    /// <param name="pirateParents"></param>
+    public void GenerateObjects(AISystem[] boatParents = null, AISystem[] pirateParents = null)
     {
-        foreach (GenerateObjectsInArea generateObjectsInArea in boxGenerators)
-        {
-            generateObjectsInArea.RegenerateObjects();
-        }
-    }
-    
-     /// <summary>
-     /// Generates boats and pirates using the parents list.
-     /// If no parents are used, then they are ignored and the boats/pirates are generated using the default prefab
-     /// specified in their areas.
-     /// </summary>
-     /// <param name="boatParents"></param>
-     /// <param name="pirateParents"></param>
-    public void GenerateObjects(BoatLogic[] boatParents = null, PirateLogic[] pirateParents = null)
-    {
-        GenerateBoats(boatParents);
-        GeneratePirates(pirateParents);
+        GenerateRedAI(boatParents);
+        GenerateBlueAI(pirateParents);
     }
 
-     /// <summary>
-     /// Generates the list of pirates using the parents list. The parent list can be null and, if so, it will be ignored.
-     /// Newly created pirates will go under mutation (MutationChances and MutationFactor will be applied).
-     /// Newly create agents will be Awaken (calling AwakeUp()).
-     /// </summary>
-     /// <param name="pirateParents"></param>
-    private void GeneratePirates(PirateLogic[] pirateParents)
+    /// <summary>
+    /// Generates the list of pirates using the parents list. The parent list can be null and, if so, it will be ignored.
+    /// Newly created pirates will go under mutation (MutationChances and MutationFactor will be applied).
+    /// Newly create agents will be Awaken (calling AwakeUp()).
+    /// </summary>
+    /// <param name="_blueAIParents"></param>
+    private void GenerateBlueAI(AISystem[] BlueAIParents)
     {
-        _activePirates = new List<PirateLogic>();
-        List<GameObject> objects = pirateGenerator.RegenerateObjects();
+        _activeBlueAI = new List<AISystem>();
+        List<GameObject> objects = blueAIGenerator.RegenerateObjects();
         foreach (GameObject obj in objects)
         {
-            PirateLogic pirate = obj.GetComponent<PirateLogic>();
-            if (pirate != null)
+            AISystem redAI = obj.GetComponent<AISystem>();
+            if (redAI != null)
             {
-                _activePirates.Add(pirate);
-                if (pirateParents != null)
+                _activeBlueAI.Add(redAI);
+                if (_blueAIParents != null)
                 {
-                    PirateLogic pirateParent = pirateParents[Random.Range(0, pirateParents.Length)];
-                    pirate.Birth(pirateParent.GetData());
+                    AISystem BlueAIParent = BlueAIParents[Random.Range(0, BlueAIParents.Length)];
+                    redAI.Birth(BlueAIParent.GetData());
                 }
 
-                pirate.Mutate(mutationFactor, mutationChance);
-                pirate.AwakeUp();
+                redAI.Mutate(mutationFactor, mutationChance);
+                redAI.AwakeUp();
             }
         }
     }
 
-     /// <summary>
-     /// Generates the list of boats using the parents list. The parent list can be null and, if so, it will be ignored.
-     /// Newly created boats will go under mutation (MutationChances and MutationFactor will be applied).
-     /// /// Newly create agents will be Awaken (calling AwakeUp()).
-     /// </summary>
-     /// <param name="boatParents"></param>
-    private void GenerateBoats(BoatLogic[] boatParents)
+    /// <summary>
+    /// Generates the list of boats using the parents list. The parent list can be null and, if so, it will be ignored.
+    /// Newly created boats will go under mutation (MutationChances and MutationFactor will be applied).
+    /// /// Newly create agents will be Awaken (calling AwakeUp()).
+    /// </summary>
+    /// <param name="RedAIParents"></param>
+    private void GenerateRedAI(AISystem[] RedAIParents)
     {
-        _activeBoats = new List<BoatLogic>();
-        List<GameObject> objects = boatGenerator.RegenerateObjects();
+        _activeRedAI = new List<AISystem>();
+        List<GameObject> objects = redAIGenerator.RegenerateObjects();
         foreach (GameObject obj in objects)
         {
-            BoatLogic boat = obj.GetComponent<BoatLogic>();
-            if (boat != null)
+            AISystem redAI = obj.GetComponent<AISystem>();
+            if (redAI != null)
             {
-                _activeBoats.Add(boat);
-                if (boatParents != null)
+                _activeRedAI.Add(redAI);
+                if (RedAIParents != null)
                 {
-                    BoatLogic boatParent = boatParents[Random.Range(0, boatParents.Length)];
-                    boat.Birth(boatParent.GetData());
+                    AISystem redAIParent = RedAIParents[Random.Range(0, RedAIParents.Length)];
+                    redAI.Birth(redAIParent.GetData());
                 }
 
-                boat.Mutate(mutationFactor, mutationChance);
-                boat.AwakeUp();
+                redAI.Mutate(mutationFactor, mutationChance);
+                redAI.AwakeUp();
             }
         }
     }
 
-     /// <summary>
-     /// Creates a new generation by using GenerateBoxes and GenerateBoats/Pirates.
-     /// Previous generations will be removed and the best parents will be selected and used to create the new generation.
-     /// The best parents (top 1) of the generation will be stored as a Prefab in the [savePrefabsAt] folder. Their name
-     /// will use the [generationCount] as an identifier.
-     /// </summary>
+    /// <summary>
+    /// Creates a new generation by using GenerateBoxes and GenerateBoats/Pirates.
+    /// Previous generations will be removed and the best parents will be selected and used to create the new generation.
+    /// The best parents (top 1) of the generation will be stored as a Prefab in the [savePrefabsAt] folder. Their name
+    /// will use the [generationCount] as an identifier.
+    /// </summary>
     public void MakeNewGeneration()
     {
-        GenerateBoxes();
-        
+        //GenerateBoxes();
+
         //Fetch parents
-        _activeBoats.RemoveAll(item => item == null);
-        _activeBoats.Sort();
-        if (_activeBoats.Count == 0)
+        _activeBlueAI.RemoveAll(item => item == null);
+        _activeBlueAI.Sort();
+        if (_activeBlueAI.Count == 0)
         {
-            GenerateBoats(_boatParents);
+            GenerateRedAI(_redAIParents);
+            GenerateBlueAI(_blueAIParents);
         }
-        _boatParents = new BoatLogic[boatParentSize];
+        _redAIParents = new AISystem[boatParentSize];
         for (int i = 0; i < boatParentSize; i++)
         {
-            _boatParents[i] = _activeBoats[i];
+            _blueAIParents[i] = _activeBlueAI[i];
         }
 
-        BoatLogic lastBoatWinner = _activeBoats[0];
-        lastBoatWinner.name += "Gen-" + generationCount; 
+        AISystem lastBoatWinner = _activeBlueAI[0];
+        lastBoatWinner.name += "Gen-" + generationCount;
         lastBoatWinnerData = lastBoatWinner.GetData();
-        PrefabUtility.SaveAsPrefabAsset(lastBoatWinner.gameObject, savePrefabsAt + lastBoatWinner.name + ".prefab");
-        
-        _activePirates.RemoveAll(item => item == null);
-        _activePirates.Sort();
-        _pirateParents = new PirateLogic[pirateParentSize];
+
+        _activeRedAI.RemoveAll(item => item == null);
+        _activeRedAI.Sort();
+        _blueAIParents = new AISystem[pirateParentSize];
         for (int i = 0; i < pirateParentSize; i++)
         {
-            _pirateParents[i] = _activePirates[i];
+            _redAIParents[i] = _activeRedAI[i];
         }
 
-        PirateLogic lastPirateWinner = _activePirates[0];
-        lastPirateWinner.name += "Gen-" + generationCount; 
+        AISystem lastPirateWinner = _activeRedAI[0];
+        lastPirateWinner.name += "Gen-" + generationCount;
         lastPirateWinnerData = lastPirateWinner.GetData();
-        PrefabUtility.SaveAsPrefabAsset(lastPirateWinner.gameObject, savePrefabsAt + lastPirateWinner.name + ".prefab");
-        
+
+
         //Winners:
-        Debug.Log("Last winner boat had: " + lastBoatWinner.GetPoints() + " points!" + " Last winner pirate had: " + lastPirateWinner.GetPoints() + " points!");
-        
-        GenerateObjects(_boatParents, _pirateParents);
+        //string information = "Last winner boat had: " + lastBoatWinner.GetPoints() + " points!" + " Last winner pirate had: " + lastPirateWinner.GetPoints() + " points!";
+        //Debug.Log(information);
+        //WriteString(lastBoatWinner.GetPoints().ToString());
+        //GenerateObjects(_redAIParents, _blueAIParents);
     }
 
-     /// <summary>
-     /// Starts a new simulation. It does not call MakeNewGeneration. It calls both GenerateBoxes and GenerateObjects and
-     /// then sets the _runningSimulation flag to true.
-     /// </summary>
+    /// <summary>
+    /// Starts a new simulation. It does not call MakeNewGeneration. It calls both GenerateBoxes and GenerateObjects and
+    /// then sets the _runningSimulation flag to true.
+    /// </summary>
     public void StartSimulation()
     {
-        GenerateBoxes();
+        //GenerateBoxes();
         GenerateObjects();
         _runningSimulation = true;
     }
 
-     /// <summary>
-     /// Continues the simulation. It calls MakeNewGeneration to use the previous state of the simulation and continue it.
-     /// It sets the _runningSimulation flag to true.
-     /// </summary>
-     public void ContinueSimulation()
-     {
-         MakeNewGeneration();
-         _runningSimulation = true;
-     }
-     
-     /// <summary>
-     /// Stops the count for the simulation. It also removes null (Destroyed) boats from the _activeBoats list and sets
-     /// all boats and pirates to Sleep.
-     /// </summary>
+    /// <summary>
+    /// Continues the simulation. It calls MakeNewGeneration to use the previous state of the simulation and continue it.
+    /// It sets the _runningSimulation flag to true.
+    /// </summary>
+    public void ContinueSimulation()
+    {
+        MakeNewGeneration();
+        _runningSimulation = true;
+    }
+
+    /// <summary>
+    /// Stops the count for the simulation. It also removes null (Destroyed) boats from the _activeBoats list and sets
+    /// all boats and pirates to Sleep.
+    /// </summary>
     public void StopSimulation()
     {
         _runningSimulation = false;
-        _activeBoats.RemoveAll(item => item == null);
-        _activeBoats.ForEach(boat => boat.Sleep());
-        _activePirates.ForEach(pirate => pirate.Sleep());
+        //_activeAI.RemoveAll(item => item == null);
+        _activeBlueAI.ForEach(boat => boat.Sleep());
+        _activeRedAI.ForEach(pirate => pirate.Sleep());
+    }
+
+    /// <summary>
+    /// Writes a string to the file. The file is the path in this case. Once this function is called with the message that should be saved,
+    /// It writes to the file.
+    /// </summary>
+    /// <param name="info"></param>
+    static void WriteString(string info)
+    {
+        string path = "Assets/Resources/Test.txt";
+
+        //Write some text to the test.txt file
+        StreamWriter writer = new StreamWriter(path, true);
+        writer.WriteLine(info);
+        writer.Close();
+
+        ////Re-import the file to update the reference in the editor
+        //AssetDatabase.ImportAsset(path);
+        //TextAsset asset = Resources.Load(path);
+
+        ////Print the text from the file
+        //Debug.Log(asset.text);
     }
 }

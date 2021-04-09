@@ -11,11 +11,7 @@ public class GenerationManagerEditor : Editor
     {
         base.DrawDefaultInspector();
         
-        if (GUILayout.Button("Generate Boxes"))
-        {
-            (target as GenerationManager)?.GenerateBoxes();
-        }
-        if (GUILayout.Button("Generate Boats/Pirates"))
+        if (GUILayout.Button("Generate AI"))
         {
             (target as GenerationManager)?.GenerateObjects();
         }

@@ -7,6 +7,10 @@ TagManager:
   - Boat
   - Box
   - Enemy
+  - AIRed
+  - Wall
+  - Ground
+  - AIBlue
   layers:
   - Default
   - TransparentFX
@@ -16,7 +20,7 @@ TagManager:
   - UI
   - 
   - 
-  - 
+  - Barrier
   - 
   - 
   - 
