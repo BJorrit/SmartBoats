@@ -70,14 +70,11 @@ public class AISystem : StateMachine, IComparable<AISystem>
 
     #region Static Variables
     private static float _minimalSpeed = 1.0f;
-    //private static float _minimalRayRadius = 1.0f;
     private static int _minimalSight = 2;
     private static float _minimalAttackRange = 2f;
-    //private static float _minimalMovingSpeed = 1.0f;
-    //private static float _speedInfluenceInSight = 0.1250f;
+    private static float _minimalStoppingDistance = 0.5f;
     private static float _sightInfluenceInSpeed = 0.0625f;
     private static float _minimalAccuracy = 5f;
-    //private static float _maxUtilityChoiceChance = 0.85f;
     #endregion
 
     public Team Team => _team;
@@ -163,6 +160,11 @@ public class AISystem : StateMachine, IComparable<AISystem>
         {
             wanderSpeed += (int)Random.Range(-mutationFactor, +mutationFactor);
             wanderSpeed = (int)Mathf.Max(wanderSpeed, _minimalSpeed);
+        }
+        if (Random.Range(0.0f, 100.0f) <= mutationChance)
+        {
+            _stoppingDistance += (int)Random.Range(-mutationFactor, +mutationFactor);
+            _stoppingDistance = (int)Mathf.Max(_stoppingDistance, _minimalStoppingDistance);
         }
         if (Random.Range(0.0f, 100.0f) <= mutationChance)
         {
