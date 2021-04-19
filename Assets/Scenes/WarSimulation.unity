@@ -6182,6 +6182,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   redAIGenerator: {fileID: 1829776929}
   blueAIGenerator: {fileID: 1003293718}
+  _fileName: Test.txt
   mutationFactor: 3.5
   mutationChance: 35
   redArmySize: 1

@@ -14,6 +14,9 @@ public class GenerationManager : MonoBehaviour
     [SerializeField]
     private GenerateObjectsInArea blueAIGenerator;
 
+    [Header("File to save info")]
+    [SerializeField] private string _fileName;
+
     [Space(10)]
     [Header("Parenting and Mutation")]
     [SerializeField]
@@ -171,8 +174,6 @@ public class GenerationManager : MonoBehaviour
     /// </summary>
     public void MakeNewGeneration()
     {
-        //GenerateBoxes();
-
         //Fetch parents
         _activeBlueAI.RemoveAll(item => item == null);
         _activeBlueAI.Sort();
@@ -208,6 +209,22 @@ public class GenerationManager : MonoBehaviour
         lastRedWinner.name += "Gen-" + generationCount;
         lastRedWinnerData = lastRedWinner.GetData();
         Debug.Log("Last winner red had: " + lastRedWinner.GetKills() + " kills!" + " Last winner blue had: " + lastBlueWinner.GetKills() + " kills!");
+
+        if (_activeBlueAI.Count < _activeRedAI.Count)
+        {
+            //red won
+            WriteString(_fileName, generationCount + ", Red");
+        }
+        if (_activeBlueAI.Count > _activeRedAI.Count)
+        {
+            //blue won
+            WriteString(_fileName, generationCount + ", Blue");
+        }
+        if (_activeBlueAI.Count == _activeRedAI.Count)
+        {
+            //tied
+            WriteString(_fileName, generationCount + ", Tie");
+        }
 
         GenerateObjects(_blueAIParents, _redAIParents);
     }
@@ -251,9 +268,9 @@ public class GenerationManager : MonoBehaviour
     /// It writes to the file.
     /// </summary>
     /// <param name="info"></param>
-    static void WriteString(string info)
+    static void WriteString(string fileName, string info)
     {
-        string path = "Assets/Resources/Test.txt";
+        string path = "Assets/Resources/" + fileName;
 
         //Write some text to the test.txt file
         StreamWriter writer = new StreamWriter(path, true);

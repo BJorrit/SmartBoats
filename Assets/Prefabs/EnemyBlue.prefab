@@ -126,12 +126,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   objectToFollow: {fileID: 0}
-  followSpeed: 1
-  wanderSpeed: 1
+  followSpeed: 10
+  wanderSpeed: 10
   checkingRadius: 2
   _attackRange: 2
   _stoppingDistance: 1.5
-  accuracy: 0.1
+  accuracy: 10
   kills: 0
   _team: 1
   _layerMask:

@@ -64,11 +64,13 @@ public class AIBehaviours : State
     public override IEnumerator Attack()
     {
         GameObject _objectToFollow = _system.objectToFollow;
-
-        if (_system.objectToFollow != null)
+        if (Random.Range(0.0f, 100.0f) <= _system.accuracy)
         {
-            _system.DestroyObject(_objectToFollow);
-            _system.kills++;
+            if (_system.objectToFollow != null)
+            {
+                _system.DestroyObject(_objectToFollow);
+                _system.kills++;
+            }
         }
         _system.SetState(new AIBehaviours(_system));
         yield break;

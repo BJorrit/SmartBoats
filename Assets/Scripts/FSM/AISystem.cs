@@ -71,12 +71,12 @@ public class AISystem : StateMachine, IComparable<AISystem>
     #region Static Variables
     private static float _minimalSpeed = 1.0f;
     //private static float _minimalRayRadius = 1.0f;
-    private static float _minimalSight = 0.1f;
+    private static int _minimalSight = 2;
     private static float _minimalAttackRange = 2f;
     //private static float _minimalMovingSpeed = 1.0f;
     //private static float _speedInfluenceInSight = 0.1250f;
     private static float _sightInfluenceInSpeed = 0.0625f;
-    private static float _minimalAccuracy = 0.5f;
+    private static float _minimalAccuracy = 5f;
     //private static float _maxUtilityChoiceChance = 0.85f;
     #endregion
 
@@ -130,7 +130,6 @@ public class AISystem : StateMachine, IComparable<AISystem>
 
             if (TargetToFollow != null)
             {
-                GetNewEnemy();
                 if (objectToFollow != null)
                 {
                     StartCoroutine(State.Follow());
@@ -144,8 +143,50 @@ public class AISystem : StateMachine, IComparable<AISystem>
             {
                 StartCoroutine(State.Wander());
             }
-        }        
+        }
     }
+
+    /// <summary>
+    /// Has a mutationChance ([0%, 100%]) of causing a mutationFactor [-mutationFactor, +mutationFactor] to each gene / weight.
+    /// The chance of mutation is calculated per gene / weight.
+    /// </summary>
+    /// <param name="mutationFactor">How much a gene / weight can change (-mutationFactor, +mutationFactor)</param>
+    /// <param name="mutationChance">Chance of a mutation happening per gene / weight.</param>
+    public void Mutate(float mutationFactor, float mutationChance)
+    {
+        if (Random.Range(0.0f, 100.0f) <= mutationChance)
+        {
+            followSpeed += (int)Random.Range(-mutationFactor, +mutationFactor);
+            followSpeed = (int)Mathf.Max(followSpeed, _minimalSpeed);
+        }
+        if (Random.Range(0.0f, 100.0f) <= mutationChance)
+        {
+            wanderSpeed += (int)Random.Range(-mutationFactor, +mutationFactor);
+            wanderSpeed = (int)Mathf.Max(wanderSpeed, _minimalSpeed);
+        }
+        if (Random.Range(0.0f, 100.0f) <= mutationChance)
+        {
+            _attackRange += (int)Random.Range(-mutationFactor, +mutationFactor);
+            _attackRange = (int)Mathf.Max(_attackRange, _minimalAttackRange);
+        }
+        if (Random.Range(0.0f, 100.0f) <= mutationChance)
+        {
+            float sightIncrease = Random.Range(-mutationFactor, +mutationFactor);
+            checkingRadius += (int)sightIncrease;
+            checkingRadius = Mathf.Max(checkingRadius, _minimalSight);
+            if (sightIncrease > 0.0f)
+            {
+                wanderSpeed -= sightIncrease * _sightInfluenceInSpeed;
+                wanderSpeed = Mathf.Max(wanderSpeed, _minimalSpeed);
+            }
+        }
+        if (Random.Range(0.0f, 100.0f) < mutationChance)
+        {
+            accuracy += (int)Random.Range(-mutationFactor, +mutationFactor);
+            accuracy = Mathf.Max(accuracy, _minimalAccuracy);
+        }
+    }
+
 
     /// <summary>
     /// This gets a random destination if there is no random position for the AI to go to.
@@ -199,25 +240,6 @@ public class AISystem : StateMachine, IComparable<AISystem>
     }
 
     /// <summary>
-    /// Once the enemy is killed, a new one should be targeted. This just picks whatever enemy is possible.
-    /// The only requirement here is that the new targeted object should be from a different team.
-    /// </summary>
-    public void GetNewEnemy()
-    {
-        //if (this.objectToFollow == null)
-        //{
-            //if (this.Team == Team.Red)
-            //{
-            //    objectToFollow = GameObject.FindGameObjectWithTag("AIBlue");
-            //}
-            //else if (this.Team == Team.Blue)
-            //{
-            //    objectToFollow = GameObject.FindGameObjectWithTag("AIRed");
-            //}
-        //}
-    }
-
-    /// <summary>
     /// This function checks the environment. If it sees the enemy the rays get red and it will follow. 
     /// If the object sees another object, it will turn yellow and get a new position.
     /// If the object sees nothing, it will just return nothing and the rays are white.
@@ -254,47 +276,6 @@ public class AISystem : StateMachine, IComparable<AISystem>
         return null;
     }
 
-    /// <summary>
-    /// Has a mutationChance ([0%, 100%]) of causing a mutationFactor [-mutationFactor, +mutationFactor] to each gene / weight.
-    /// The chance of mutation is calculated per gene / weight.
-    /// </summary>
-    /// <param name="mutationFactor">How much a gene / weight can change (-mutationFactor, +mutationFactor)</param>
-    /// <param name="mutationChance">Chance of a mutation happening per gene / weight.</param>
-    public void Mutate(float mutationFactor, float mutationChance)
-    {
-        if (Random.Range(0.0f, 100.0f) <= mutationChance)
-        {
-            followSpeed += (int)Random.Range(-mutationFactor, +mutationFactor);
-            followSpeed = (int)Mathf.Max(followSpeed, _minimalSpeed);
-        }
-        if (Random.Range(0.0f, 100.0f) <= mutationChance)
-        {
-            wanderSpeed += (int)Random.Range(-mutationFactor, +mutationFactor);
-            wanderSpeed = (int)Mathf.Max(wanderSpeed, _minimalSpeed);
-        }
-        if (Random.Range(0.0f, 100.0f) <= mutationChance)
-        {
-            _attackRange += (int)Random.Range(-mutationFactor, +mutationFactor);
-            _attackRange = (int)Mathf.Max(_attackRange, _minimalAttackRange);
-        }
-        if (Random.Range(0.0f, 100.0f) <= mutationChance)
-        {
-            float sightIncrease = Random.Range(-mutationFactor, +mutationFactor);
-            _rayDistance += sightIncrease;
-            _rayDistance = Mathf.Max(_rayDistance, _minimalSight);
-            if (sightIncrease > 0.0f)
-            {
-                wanderSpeed -= sightIncrease * _sightInfluenceInSpeed;
-                wanderSpeed = Mathf.Max(wanderSpeed, _minimalSpeed);
-            }
-        }
-        if(Random.Range(0.0f, 100.0f) < mutationChance)
-        {
-            accuracy += (int)Random.Range(-mutationFactor, +mutationFactor);
-            accuracy = Mathf.Max(accuracy, _minimalAccuracy);
-        }
-    }
-
     public void Sleep()
     {
         _isAwake = false;
@@ -329,5 +310,4 @@ public enum Team
 {
     Red,
     Blue,
-    NoTeam
 }
