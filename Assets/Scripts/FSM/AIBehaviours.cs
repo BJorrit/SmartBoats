@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using System;
+using Random = UnityEngine.Random;
 
 public class AIBehaviours : State
 {
@@ -67,6 +68,7 @@ public class AIBehaviours : State
         if (_system.objectToFollow != null)
         {
             _system.DestroyObject(_objectToFollow);
+            _system.kills++;
         }
         _system.SetState(new AIBehaviours(_system));
         yield break;

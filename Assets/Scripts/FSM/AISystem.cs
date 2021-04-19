@@ -5,7 +5,7 @@ using UnityEngine;
 using System.Linq;
 using Random = UnityEngine.Random;
 
-struct AIDirection
+struct AIDirection : IComparable
 {
     public Vector3 Direction2 { get; }
     public float AIutility;
@@ -39,19 +39,21 @@ public struct AIData
     public int checkingRadius;
     public float attackRange;
     public float stoppingDistance;
+    public float accuracy;
 
-    public AIData(float followSpeed, float wanderSpeed, int checkingRadius, float attackRange, float stoppingDistance)
+    public AIData(float followSpeed, float wanderSpeed, int checkingRadius, float attackRange, float stoppingDistance, float accuracy)
     {
         this.followSpeed = followSpeed;
         this.wanderSpeed = wanderSpeed;
         this.checkingRadius = checkingRadius;
         this.attackRange = attackRange;
         this.stoppingDistance = stoppingDistance;
+        this.accuracy = accuracy;
     }
 }
 
 [RequireComponent(typeof(Rigidbody))]
-public class AISystem : StateMachine
+public class AISystem : StateMachine, IComparable<AISystem>
 {
     private Rigidbody _rigidbody;
     [SerializeField] public GameObject objectToFollow;
@@ -63,15 +65,19 @@ public class AISystem : StateMachine
     [SerializeField] public int checkingRadius = 0;
     [SerializeField] public float _attackRange = 3f;
     [SerializeField] public float _stoppingDistance = 1.5f;
+    [SerializeField] public float accuracy = 0;
+    [SerializeField] public int kills = 0;
 
     #region Static Variables
     private static float _minimalSpeed = 1.0f;
-    private static float _minimalRayRadius = 1.0f;
+    //private static float _minimalRayRadius = 1.0f;
     private static float _minimalSight = 0.1f;
-    private static float _minimalMovingSpeed = 1.0f;
-    private static float _speedInfluenceInSight = 0.1250f;
+    private static float _minimalAttackRange = 2f;
+    //private static float _minimalMovingSpeed = 1.0f;
+    //private static float _speedInfluenceInSight = 0.1250f;
     private static float _sightInfluenceInSpeed = 0.0625f;
-    private static float _maxUtilityChoiceChance = 0.85f;
+    private static float _minimalAccuracy = 0.5f;
+    //private static float _maxUtilityChoiceChance = 0.85f;
     #endregion
 
     public Team Team => _team;
@@ -118,24 +124,27 @@ public class AISystem : StateMachine
 
     private void Update()
     {
-        var TargetToFollow = CheckEnvironment();
-
-        if (TargetToFollow != null)
+        if (_isAwake)
         {
-            GetNewEnemy();
-            if (objectToFollow != null)
+            var TargetToFollow = CheckEnvironment();
+
+            if (TargetToFollow != null)
             {
-                StartCoroutine(State.Follow());
-                if (Vector3.Distance(transform.position, objectToFollow.transform.position) < 3f)
+                GetNewEnemy();
+                if (objectToFollow != null)
                 {
-                    StartCoroutine(State.Attack());
+                    StartCoroutine(State.Follow());
+                    if (Vector3.Distance(transform.position, objectToFollow.transform.position) < 3f)
+                    {
+                        StartCoroutine(State.Attack());
+                    }
                 }
             }
-        }
-        else
-        {
-            StartCoroutine(State.Wander());
-        }
+            else
+            {
+                StartCoroutine(State.Wander());
+            }
+        }        
     }
 
     /// <summary>
@@ -195,17 +204,17 @@ public class AISystem : StateMachine
     /// </summary>
     public void GetNewEnemy()
     {
-        if (this.objectToFollow == null)
-        {
-            if (this.Team == Team.Red)
-            {
-                objectToFollow = GameObject.FindGameObjectWithTag("AIBlue");
-            }
-            else if (this.Team == Team.Blue)
-            {
-                objectToFollow = GameObject.FindGameObjectWithTag("AIRed");
-            }
-        }
+        //if (this.objectToFollow == null)
+        //{
+            //if (this.Team == Team.Red)
+            //{
+            //    objectToFollow = GameObject.FindGameObjectWithTag("AIBlue");
+            //}
+            //else if (this.Team == Team.Blue)
+            //{
+            //    objectToFollow = GameObject.FindGameObjectWithTag("AIRed");
+            //}
+        //}
     }
 
     /// <summary>
@@ -228,6 +237,7 @@ public class AISystem : StateMachine
                 if (enemy != null && enemy.Team != gameObject.GetComponent<AISystem>().Team)
                 {
                     Debug.DrawRay(pos, direction * hit.distance, Color.red);
+                    objectToFollow = enemy.gameObject;
                     return enemy.transform;
                 }
                 else
@@ -264,6 +274,11 @@ public class AISystem : StateMachine
         }
         if (Random.Range(0.0f, 100.0f) <= mutationChance)
         {
+            _attackRange += (int)Random.Range(-mutationFactor, +mutationFactor);
+            _attackRange = (int)Mathf.Max(_attackRange, _minimalAttackRange);
+        }
+        if (Random.Range(0.0f, 100.0f) <= mutationChance)
+        {
             float sightIncrease = Random.Range(-mutationFactor, +mutationFactor);
             _rayDistance += sightIncrease;
             _rayDistance = Mathf.Max(_rayDistance, _minimalSight);
@@ -273,55 +288,16 @@ public class AISystem : StateMachine
                 wanderSpeed = Mathf.Max(wanderSpeed, _minimalSpeed);
             }
         }
-        //if (Random.Range(0.0f, 100.0f) <= mutationChance)
-        //{
-        //    float movingSpeedIncrease = Random.Range(-mutationFactor, +mutationFactor);
-        //    movingSpeed += movingSpeedIncrease;
-        //    movingSpeed = Mathf.Max(movingSpeed, _minimalMovingSpeed);
-        //    if (movingSpeedIncrease > 0.0f)
-        //    {
-        //        sight -= movingSpeedIncrease * _speedInfluenceInSight;
-        //        sight = Mathf.Max(sight, _minimalSight);
-        //    }
-        //}
-        //if (Random.Range(0.0f, 100.0f) <= mutationChance)
-        //{
-        //    randomDirectionValue.x += Random.Range(-mutationFactor, +mutationFactor);
-        //}
-        //if (Random.Range(0.0f, 100.0f) <= mutationChance)
-        //{
-        //    randomDirectionValue.y += Random.Range(-mutationFactor, +mutationFactor);
-        //}
-        //if (Random.Range(0.0f, 100.0f) <= mutationChance)
-        //{
-        //    boxWeight += Random.Range(-mutationFactor, +mutationFactor);
-        //}
-        //if (Random.Range(0.0f, 100.0f) <= mutationChance)
-        //{
-        //    distanceFactor += Random.Range(-mutationFactor, +mutationFactor);
-        //}
-        //if (Random.Range(0.0f, 100.0f) <= mutationChance)
-        //{
-        //    boatWeight += Random.Range(-mutationFactor, +mutationFactor);
-        //}
-        //if (Random.Range(0.0f, 100.0f) <= mutationChance)
-        //{
-        //    boatDistanceFactor += Random.Range(-mutationFactor, +mutationFactor);
-        //}
-        //if (Random.Range(0.0f, 100.0f) <= mutationChance)
-        //{
-        //    enemyWeight += Random.Range(-mutationFactor, +mutationFactor);
-        //}
-        //if (Random.Range(0.0f, 100.0f) <= mutationChance)
-        //{
-        //    enemyDistanceFactor += Random.Range(-mutationFactor, +mutationFactor);
-        //}
+        if(Random.Range(0.0f, 100.0f) < mutationChance)
+        {
+            accuracy += (int)Random.Range(-mutationFactor, +mutationFactor);
+            accuracy = Mathf.Max(accuracy, _minimalAccuracy);
+        }
     }
 
     public void Sleep()
     {
         _isAwake = false;
-        _rigidbody.velocity = Vector3.zero;
     }
 
     /// <summary>
@@ -333,14 +309,19 @@ public class AISystem : StateMachine
         _isAwake = true;
     }
 
-    //public float GetPoints()
-    //{
-    //    return points;
-    //}
+    public int GetKills()
+    {
+        return kills;
+    }
 
     public AIData GetData()
     {
-        return new AIData(followSpeed, wanderSpeed, checkingRadius, _attackRange, _stoppingDistance);
+        return new AIData(followSpeed, wanderSpeed, checkingRadius, _attackRange, _stoppingDistance, accuracy);
+    }
+
+    public int CompareTo(AISystem other)
+    {
+        return other.kills.CompareTo(this.kills);
     }
 }
 

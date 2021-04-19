@@ -8,7 +8,7 @@ using System.Collections.Generic;
 [ExecuteInEditMode]
 public class GenerateObjectsInArea : MonoBehaviour
 {
-    private Bounds _bounds;
+    [SerializeField]private Bounds _bounds;
 
     [Header("Objects")]
     [SerializeField, Tooltip("Possible objecst to be created in the area.")]
@@ -25,7 +25,7 @@ public class GenerateObjectsInArea : MonoBehaviour
 
     private void Awake()
     {
-        _bounds = GetComponent<Renderer>().bounds;
+        //_bounds = GetComponent<Renderer>().bounds;
     }
 
     /// <summary>

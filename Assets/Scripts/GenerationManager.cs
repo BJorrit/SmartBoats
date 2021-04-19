@@ -21,9 +21,9 @@ public class GenerationManager : MonoBehaviour
     [SerializeField]
     private float mutationChance;
     [SerializeField]
-    private int boatParentSize;
+    private int redArmySize;
     [SerializeField]
-    private int pirateParentSize;
+    private int blueArmySize;
 
     [Space(10)]
     [Header("Simulation Controls")]
@@ -36,19 +36,19 @@ public class GenerationManager : MonoBehaviour
     [SerializeField, Tooltip("Initial count for the simulation. Used for the Prefabs naming.")]
     private int generationCount;
 
-    [Space(10)]
-    [Header("Prefab Saving")]
-    [SerializeField]
-    private string savePrefabsAt;
+    //[Space(10)]
+    //[Header("Prefab Saving")]
+    //[SerializeField]
+    //private string savePrefabsAt;
 
     /// <summary>
     /// Those variables are used mostly for debugging in the inspector.
     /// </summary>
     [Header("Former winners")]
     [SerializeField]
-    private AIData lastBoatWinnerData;
+    private AIData lastBlueWinnerData;
     [SerializeField]
-    private AIData lastPirateWinnerData;
+    private AIData lastRedWinnerData;
 
     private bool _runningSimulation;
     private List<AISystem> _activeRedAI;
@@ -77,6 +77,21 @@ public class GenerationManager : MonoBehaviour
             }
             simulationCount += Time.deltaTime;
         }
+
+        //if (_runningSimulation)
+        //{
+        //    if (_activeRedAI.Count == 0)
+        //    {
+        //        ++generationCount;
+        //        MakeNewGeneration();
+        //    }
+
+        //    if (_activeBlueAI.Count == 0)
+        //    {
+        //        ++generationCount;
+        //        MakeNewGeneration();
+        //    }
+        //}
     }
 
     /// <summary>
@@ -86,10 +101,10 @@ public class GenerationManager : MonoBehaviour
     /// </summary>
     /// <param name="boatParents"></param>
     /// <param name="pirateParents"></param>
-    public void GenerateObjects(AISystem[] boatParents = null, AISystem[] pirateParents = null)
+    public void GenerateObjects(AISystem[] blueAI = null, AISystem[] redAI = null)
     {
-        GenerateRedAI(boatParents);
-        GenerateBlueAI(pirateParents);
+        GenerateRedAI(redAI);
+        GenerateBlueAI(blueAI);
     }
 
     /// <summary>
@@ -104,18 +119,18 @@ public class GenerationManager : MonoBehaviour
         List<GameObject> objects = blueAIGenerator.RegenerateObjects();
         foreach (GameObject obj in objects)
         {
-            AISystem redAI = obj.GetComponent<AISystem>();
-            if (redAI != null)
+            AISystem blueAI = obj.GetComponent<AISystem>();
+            if (blueAI != null)
             {
-                _activeBlueAI.Add(redAI);
+                _activeBlueAI.Add(blueAI);
                 if (_blueAIParents != null)
                 {
                     AISystem BlueAIParent = BlueAIParents[Random.Range(0, BlueAIParents.Length)];
-                    redAI.Birth(BlueAIParent.GetData());
+                    blueAI.Birth(BlueAIParent.GetData());
                 }
 
-                redAI.Mutate(mutationFactor, mutationChance);
-                redAI.AwakeUp();
+                blueAI.Mutate(mutationFactor, mutationChance);
+                blueAI.AwakeUp();
             }
         }
     }
@@ -163,37 +178,38 @@ public class GenerationManager : MonoBehaviour
         _activeBlueAI.Sort();
         if (_activeBlueAI.Count == 0)
         {
-            GenerateRedAI(_redAIParents);
+
             GenerateBlueAI(_blueAIParents);
         }
-        _redAIParents = new AISystem[boatParentSize];
-        for (int i = 0; i < boatParentSize; i++)
+        _blueAIParents = new AISystem[blueArmySize];
+        for (int i = 0; i < blueArmySize; i++)
         {
             _blueAIParents[i] = _activeBlueAI[i];
         }
 
-        AISystem lastBoatWinner = _activeBlueAI[0];
-        lastBoatWinner.name += "Gen-" + generationCount;
-        lastBoatWinnerData = lastBoatWinner.GetData();
+        AISystem lastBlueWinner = _activeBlueAI[0];
+        lastBlueWinner.name += "Gen-" + generationCount;
+        lastBlueWinnerData = lastBlueWinner.GetData();
 
         _activeRedAI.RemoveAll(item => item == null);
         _activeRedAI.Sort();
-        _blueAIParents = new AISystem[pirateParentSize];
-        for (int i = 0; i < pirateParentSize; i++)
+        if (_activeRedAI.Count == 0)
+        {
+
+            GenerateRedAI(_redAIParents);
+        }
+        _redAIParents = new AISystem[redArmySize];
+        for (int i = 0; i < redArmySize; i++)
         {
             _redAIParents[i] = _activeRedAI[i];
         }
 
-        AISystem lastPirateWinner = _activeRedAI[0];
-        lastPirateWinner.name += "Gen-" + generationCount;
-        lastPirateWinnerData = lastPirateWinner.GetData();
+        AISystem lastRedWinner = _activeRedAI[0];
+        lastRedWinner.name += "Gen-" + generationCount;
+        lastRedWinnerData = lastRedWinner.GetData();
+        Debug.Log("Last winner red had: " + lastRedWinner.GetKills() + " kills!" + " Last winner blue had: " + lastBlueWinner.GetKills() + " kills!");
 
-
-        //Winners:
-        //string information = "Last winner boat had: " + lastBoatWinner.GetPoints() + " points!" + " Last winner pirate had: " + lastPirateWinner.GetPoints() + " points!";
-        //Debug.Log(information);
-        //WriteString(lastBoatWinner.GetPoints().ToString());
-        //GenerateObjects(_redAIParents, _blueAIParents);
+        GenerateObjects(_blueAIParents, _redAIParents);
     }
 
     /// <summary>
@@ -224,9 +240,10 @@ public class GenerationManager : MonoBehaviour
     public void StopSimulation()
     {
         _runningSimulation = false;
-        //_activeAI.RemoveAll(item => item == null);
-        _activeBlueAI.ForEach(boat => boat.Sleep());
-        _activeRedAI.ForEach(pirate => pirate.Sleep());
+        _activeBlueAI.RemoveAll(item => item == null);
+        _activeRedAI.RemoveAll(item => item == null);
+        _activeBlueAI.ForEach(blueAI => blueAI.Sleep());
+        _activeRedAI.ForEach(redAI => redAI.Sleep());
     }
 
     /// <summary>
