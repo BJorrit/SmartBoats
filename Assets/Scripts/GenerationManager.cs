@@ -213,17 +213,17 @@ public class GenerationManager : MonoBehaviour
         if (_activeBlueAI.Count < _activeRedAI.Count)
         {
             //red won
-            WriteString(_fileName, generationCount + ", Red");
+            WriteString(_fileName, "Red");
         }
         if (_activeBlueAI.Count > _activeRedAI.Count)
         {
             //blue won
-            WriteString(_fileName, generationCount + ", Blue");
+            WriteString(_fileName, "Blue");
         }
         if (_activeBlueAI.Count == _activeRedAI.Count)
         {
             //tied
-            WriteString(_fileName, generationCount + ", Tie");
+            WriteString(_fileName, "Tie");
         }
 
         GenerateObjects(_blueAIParents, _redAIParents);
