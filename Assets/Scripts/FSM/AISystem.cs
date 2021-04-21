@@ -5,32 +5,6 @@ using UnityEngine;
 using System.Linq;
 using Random = UnityEngine.Random;
 
-struct AIDirection : IComparable
-{
-    public Vector3 Direction2 { get; }
-    public float AIutility;
-
-    public AIDirection(Vector3 direction, float utility)
-    {
-        Direction2 = direction;
-        this.AIutility = utility;
-    }
-
-    /// <summary>
-    /// Notices that this method is an "inverse" sorting. It makes the higher values on top of the Sort, instead of
-    /// the smaller values. For the smaller values, the return line would be utility.CompareTo(otherAgent.utility).
-    /// </summary>
-    /// <param name="obj"></param>
-    /// <returns></returns>
-    public int CompareTo(object obj)
-    {
-        if (obj == null) return 1;
-
-        AIDirection otherAgent = (AIDirection)obj;
-        return otherAgent.AIutility.CompareTo(AIutility);
-    }
-}
-
 [Serializable]
 public struct AIData
 {
@@ -38,16 +12,14 @@ public struct AIData
     public float wanderSpeed;
     public int checkingRadius;
     public float attackRange;
-    public float stoppingDistance;
     public float accuracy;
 
-    public AIData(float followSpeed, float wanderSpeed, int checkingRadius, float attackRange, float stoppingDistance, float accuracy)
+    public AIData(float followSpeed, float wanderSpeed, int checkingRadius, float attackRange, float accuracy)
     {
         this.followSpeed = followSpeed;
         this.wanderSpeed = wanderSpeed;
         this.checkingRadius = checkingRadius;
         this.attackRange = attackRange;
-        this.stoppingDistance = stoppingDistance;
         this.accuracy = accuracy;
     }
 }
@@ -63,18 +35,19 @@ public class AISystem : StateMachine, IComparable<AISystem>
     [SerializeField] public float followSpeed = 0;
     [SerializeField] public float wanderSpeed = 0;
     [SerializeField] public int checkingRadius = 0;
-    [SerializeField] public float _attackRange = 3f;
-    [SerializeField] public float _stoppingDistance = 1.5f;
+    [SerializeField] public float attackRange = 3f;
     [SerializeField] public float accuracy = 0;
     [SerializeField] public int kills = 0;
 
+    private bool _reloadNeeded;
+
     #region Static Variables
+    private static float _stoppingDistance = 1.5f;
     private static float _minimalSpeed = 1.0f;
     private static int _minimalSight = 2;
     private static float _minimalAttackRange = 2f;
-    private static float _minimalStoppingDistance = 0.5f;
-    private static float _sightInfluenceInSpeed = 0.0625f;
     private static float _minimalAccuracy = 5f;
+    private static int _meleeDistance = 2;
     #endregion
 
     public Team Team => _team;
@@ -86,6 +59,7 @@ public class AISystem : StateMachine, IComparable<AISystem>
     [HideInInspector] public Vector3 _direction;
     [SerializeField] public Vector3 wanderPositions;
     [HideInInspector] public Rigidbody _rigidBody;
+
 
     Quaternion startingAngle = Quaternion.AngleAxis(-60, Vector3.up);
     Quaternion stepAngle = Quaternion.AngleAxis(5, Vector3.up);
@@ -99,22 +73,12 @@ public class AISystem : StateMachine, IComparable<AISystem>
         followSpeed = parent.followSpeed;
         wanderSpeed = parent.wanderSpeed;
         checkingRadius = parent.checkingRadius;
-        _attackRange = parent.attackRange;
-        _stoppingDistance = parent.stoppingDistance;
+        attackRange = parent.attackRange;
     }
 
     void Start()
     {
         _rigidBody = GetComponent<Rigidbody>();
-
-        if (this.Team == Team.Red)
-        {
-            objectToFollow = GameObject.FindGameObjectWithTag("AIBlue");
-        }
-        else if (this.Team == Team.Blue)
-        {
-            objectToFollow = GameObject.FindGameObjectWithTag("AIRed");
-        }
 
         SetState(new AIBehaviours(this));
     }
@@ -130,9 +94,16 @@ public class AISystem : StateMachine, IComparable<AISystem>
                 if (objectToFollow != null)
                 {
                     StartCoroutine(State.Follow());
-                    if (Vector3.Distance(transform.position, objectToFollow.transform.position) < 3f)
+                    if (Vector3.Distance(transform.position, objectToFollow.transform.position) < attackRange)
                     {
-                        StartCoroutine(State.Attack());
+                        if (Vector3.Distance(transform.position, objectToFollow.transform.position) > _meleeDistance)
+                        {
+                            StartCoroutine(State.Attack());
+                        }
+                        else if (Vector3.Distance(transform.position, objectToFollow.transform.position) <= _meleeDistance)
+                        {
+                            StartCoroutine(State.Melee());
+                        }
                     }
                 }
             }
@@ -163,26 +134,15 @@ public class AISystem : StateMachine, IComparable<AISystem>
         }
         if (Random.Range(0.0f, 100.0f) <= mutationChance)
         {
-            _stoppingDistance += (int)Random.Range(-mutationFactor, +mutationFactor);
-            _stoppingDistance = (int)Mathf.Max(_stoppingDistance, _minimalStoppingDistance);
+            attackRange += (int)Random.Range(-mutationFactor, +mutationFactor);
+            attackRange = (int)Mathf.Max(attackRange, _minimalAttackRange);
         }
         if (Random.Range(0.0f, 100.0f) <= mutationChance)
         {
-            _attackRange += (int)Random.Range(-mutationFactor, +mutationFactor);
-            _attackRange = (int)Mathf.Max(_attackRange, _minimalAttackRange);
-        }
-        if (Random.Range(0.0f, 100.0f) <= mutationChance)
-        {
-            float sightIncrease = Random.Range(-mutationFactor, +mutationFactor);
-            checkingRadius += (int)sightIncrease;
+            checkingRadius += (int)Random.Range(-mutationFactor, +mutationFactor);
             checkingRadius = Mathf.Max(checkingRadius, _minimalSight);
-            if (sightIncrease > 0.0f)
-            {
-                wanderSpeed -= sightIncrease * _sightInfluenceInSpeed;
-                wanderSpeed = Mathf.Max(wanderSpeed, _minimalSpeed);
-            }
         }
-        if (Random.Range(0.0f, 100.0f) < mutationChance)
+        if (Random.Range(0.0f, 100.0f) <= mutationChance)
         {
             accuracy += (int)Random.Range(-mutationFactor, +mutationFactor);
             accuracy = Mathf.Max(accuracy, _minimalAccuracy);
@@ -236,9 +196,34 @@ public class AISystem : StateMachine, IComparable<AISystem>
     /// This just deletes the gameObject that is filled in between the parameters when calling the function.
     /// </summary>
     /// <param name="gameObject"></param>
-    public void DestroyObject(GameObject gameObject)
+    public void ShootingAttack(GameObject gameObject)
+    {
+        if (_reloadNeeded == false)
+        {
+            if (Random.Range(0.0f, 100.0f) <= accuracy)
+            {
+                Destroy(gameObject);
+                kills++;
+            }
+            _reloadNeeded = true;
+        }
+
+        if (_reloadNeeded == true)
+        {
+            Invoke("Reloading", 1.5f);
+        }
+    }
+
+    public void Reloading()
+    {
+        _reloadNeeded = false;
+        CancelInvoke("Reloading");
+    }
+
+    public void MeleeAttack(GameObject gameObject)
     {
         Destroy(gameObject);
+        kills++;
     }
 
     /// <summary>
@@ -299,7 +284,7 @@ public class AISystem : StateMachine, IComparable<AISystem>
 
     public AIData GetData()
     {
-        return new AIData(followSpeed, wanderSpeed, checkingRadius, _attackRange, _stoppingDistance, accuracy);
+        return new AIData(followSpeed, wanderSpeed, checkingRadius, attackRange, accuracy);
     }
 
     public int CompareTo(AISystem other)

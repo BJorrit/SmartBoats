@@ -23,10 +23,6 @@ public class GenerateObjectsInArea : MonoBehaviour
     [SerializeField]
     private Vector3 randomRotationMaximal;
 
-    private void Awake()
-    {
-        //_bounds = GetComponent<Renderer>().bounds;
-    }
 
     /// <summary>
     /// Remove all children objects. Uses DestroyImmediate.

@@ -16,6 +16,9 @@ public class GenerationManager : MonoBehaviour
 
     [Header("File to save info")]
     [SerializeField] private string _fileName;
+    [SerializeField] private string _amountofRedFile;
+    [SerializeField] private string _amountofBlueFile;
+    [SerializeField] private string _generationCountFile;
 
     [Space(10)]
     [Header("Parenting and Mutation")]
@@ -30,6 +33,7 @@ public class GenerationManager : MonoBehaviour
 
     [Space(10)]
     [Header("Simulation Controls")]
+    [SerializeField] private int _amountOfGenerations;
     [SerializeField, Tooltip("Time per simulation (in seconds).")]
     private float simulationTimer;
     [SerializeField, Tooltip("Current time spent on this simulation.")]
@@ -61,6 +65,9 @@ public class GenerationManager : MonoBehaviour
 
     private void Start()
     {
+        const int initialSeed = 666;
+        Random.InitState(initialSeed);
+
         if (runOnStart)
         {
             StartSimulation();
@@ -79,6 +86,11 @@ public class GenerationManager : MonoBehaviour
                 simulationCount = -Time.deltaTime;
             }
             simulationCount += Time.deltaTime;
+        }
+
+        if(generationCount >= _amountOfGenerations)
+        {
+            StopSimulation();
         }
 
         //if (_runningSimulation)
@@ -214,16 +226,25 @@ public class GenerationManager : MonoBehaviour
         {
             //red won
             WriteString(_fileName, "Red");
+            WriteString(_generationCountFile, generationCount.ToString());
+            WriteString(_amountofBlueFile, _activeBlueAI.Count.ToString());
+            WriteString(_amountofRedFile, _activeRedAI.Count.ToString());
         }
         if (_activeBlueAI.Count > _activeRedAI.Count)
         {
             //blue won
             WriteString(_fileName, "Blue");
+            WriteString(_generationCountFile, generationCount.ToString());
+            WriteString(_amountofBlueFile, _activeBlueAI.Count.ToString());
+            WriteString(_amountofRedFile, _activeRedAI.Count.ToString());
         }
         if (_activeBlueAI.Count == _activeRedAI.Count)
         {
             //tied
             WriteString(_fileName, "Tie");
+            WriteString(_generationCountFile, generationCount.ToString());
+            WriteString(_amountofBlueFile, _activeBlueAI.Count.ToString());
+            WriteString(_amountofRedFile, _activeRedAI.Count.ToString());
         }
 
         GenerateObjects(_blueAIParents, _redAIParents);

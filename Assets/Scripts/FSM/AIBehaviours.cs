@@ -36,25 +36,6 @@ public class AIBehaviours : State
 
     public override IEnumerator Follow()
     {
-        //float interpolation = _system.followSpeed * Time.deltaTime;
-        //GameObject _objectToFollow = _system.objectToFollow;
-
-        //while (_system.IsPathBlocked())
-        //{
-        //    _system.GetDestination();
-        //}
-        //yield return new WaitForSeconds(2f);
-
-        //Vector3 position = this._system.transform.position;
-        //position.x = Mathf.Lerp(this._system.transform.position.x, _objectToFollow.transform.position.x, interpolation);
-        //position.y = Mathf.Lerp(this._system.transform.position.y, _objectToFollow.transform.position.y, interpolation);
-        //position.z = Mathf.Lerp(this._system.transform.position.z, _objectToFollow.transform.position.z, interpolation);
-
-        //Quaternion rotation = Quaternion.Euler(0, _system.transform.rotation.y * interpolation, 0);
-
-        //this._system.transform.rotation = rotation;
-        //this._system.transform.position = position;
-
         _system.transform.LookAt(_system.objectToFollow.transform);
         _system.transform.Translate(Vector3.forward * Time.deltaTime * 5f);
 
@@ -64,17 +45,28 @@ public class AIBehaviours : State
     public override IEnumerator Attack()
     {
         GameObject _objectToFollow = _system.objectToFollow;
-        if (Random.Range(0.0f, 100.0f) <= _system.accuracy)
+        if (_system.objectToFollow != null)
         {
-            if (_system.objectToFollow != null)
-            {
-                _system.DestroyObject(_objectToFollow);
-                _system.kills++;
-            }
+            _system.ShootingAttack(_objectToFollow);
         }
-        _system.SetState(new AIBehaviours(_system));
+        else
+        {
+            _system.SetState(new AIBehaviours(_system));
+        }
         yield break;
-        
+    }
+
+    public override IEnumerator Melee()
+    {
+        GameObject _objectToFollow = _system.objectToFollow;
+        if (_system.objectToFollow != null)
+        {
+            _system.MeleeAttack(_objectToFollow);
+        }
+
+            _system.SetState(new AIBehaviours(_system));
+
+        yield break;
     }
 
 }
