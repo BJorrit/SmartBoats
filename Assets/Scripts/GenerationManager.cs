@@ -19,6 +19,8 @@ public class GenerationManager : MonoBehaviour
     [SerializeField] private string _amountofRedFile;
     [SerializeField] private string _amountofBlueFile;
     [SerializeField] private string _generationCountFile;
+    [SerializeField] private string _radiusRedFile;
+    [SerializeField] private string _rangeBlueFile;
 
     [Space(10)]
     [Header("Parenting and Mutation")]
@@ -229,6 +231,8 @@ public class GenerationManager : MonoBehaviour
             WriteString(_generationCountFile, generationCount.ToString());
             WriteString(_amountofBlueFile, _activeBlueAI.Count.ToString());
             WriteString(_amountofRedFile, _activeRedAI.Count.ToString());
+            WriteString(_radiusRedFile, lastRedWinner.checkingRadius.ToString());
+            WriteString(_rangeBlueFile, lastBlueWinner.attackRange.ToString());
         }
         if (_activeBlueAI.Count > _activeRedAI.Count)
         {
@@ -237,6 +241,9 @@ public class GenerationManager : MonoBehaviour
             WriteString(_generationCountFile, generationCount.ToString());
             WriteString(_amountofBlueFile, _activeBlueAI.Count.ToString());
             WriteString(_amountofRedFile, _activeRedAI.Count.ToString());
+            WriteString(_radiusRedFile, lastRedWinner.wanderSpeed.ToString());
+            WriteString(_rangeBlueFile, lastBlueWinner.followSpeed.ToString());
+
         }
         if (_activeBlueAI.Count == _activeRedAI.Count)
         {
@@ -245,6 +252,8 @@ public class GenerationManager : MonoBehaviour
             WriteString(_generationCountFile, generationCount.ToString());
             WriteString(_amountofBlueFile, _activeBlueAI.Count.ToString());
             WriteString(_amountofRedFile, _activeRedAI.Count.ToString());
+            WriteString(_radiusRedFile, lastRedWinner.wanderSpeed.ToString());
+            WriteString(_rangeBlueFile, lastBlueWinner.followSpeed.ToString());
         }
 
         GenerateObjects(_blueAIParents, _redAIParents);

@@ -869,6 +869,8 @@ MonoBehaviour:
   _amountofRedFile: RedLeftFile.txt
   _amountofBlueFile: BlueLeftFile.txt
   _generationCountFile: GenerationCountFile.txt
+  _radiusRedFile: RadiusFile.txt
+  _rangeBlueFile: RangeFile.txt
   mutationFactor: 3.5
   mutationChance: 35
   redArmySize: 1
@@ -938,7 +940,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _bounds:
     m_Center: {x: 0, y: 0.8, z: 0}
-    m_Extent: {x: 47, y: 0, z: 47}
+    m_Extent: {x: 40, y: 0, z: 40}
   gameObjectToBeCreated:
   - {fileID: 8768460897081766227, guid: 4620c6d8c9b760847938e08709b63e88, type: 3}
   count: 25
