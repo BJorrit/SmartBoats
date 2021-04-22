@@ -15,12 +15,23 @@ public class GenerationManager : MonoBehaviour
     private GenerateObjectsInArea blueAIGenerator;
 
     [Header("File to save info")]
+    //General data to save
     [SerializeField] private string _fileName;
     [SerializeField] private string _amountofRedFile;
     [SerializeField] private string _amountofBlueFile;
     [SerializeField] private string _generationCountFile;
+
+    //speed data to save
     [SerializeField] private string _speedRedFile;
+    [SerializeField] private string _speedBlueFile;
+
+    //range data to save
     [SerializeField] private string _rangeBlueFile;
+    [SerializeField] private string _rangeRedFile;
+
+    //radius data to save
+    [SerializeField] private string _radiusBlueFile;
+    [SerializeField] private string _radiusRedFile;
 
     [Space(10)]
     [Header("Parenting and Mutation")]
@@ -225,7 +236,17 @@ public class GenerationManager : MonoBehaviour
         Debug.Log("Last winner red had: " + lastRedWinner.GetKills() + " kills!" + " Last winner blue had: " + lastBlueWinner.GetKills() + " kills!");
 
         float averageSpeedRed = (lastRedWinner.wanderSpeed +lastRedWinner.followSpeed) / 2;
+        float averageSpeedBlue = (lastBlueWinner.wanderSpeed + lastBlueWinner.followSpeed) / 2;
+
         float averageRadiusBlue = (lastBlueWinner.attackRange + lastBlueWinner.checkingRadius) / 2;
+        float averageRadiusRed = (lastRedWinner.attackRange + lastRedWinner.checkingRadius) / 2;
+
+        float RadiusBlue = lastBlueWinner.checkingRadius;
+        float RadiusRed = lastRedWinner.checkingRadius;
+
+        float RangeBlue = lastBlueWinner.attackRange;
+        float RangeRed = lastRedWinner.attackRange;
+
         if (_activeBlueAI.Count < _activeRedAI.Count)
         {
             //red won
@@ -233,8 +254,12 @@ public class GenerationManager : MonoBehaviour
             WriteString(_generationCountFile, generationCount.ToString());
             WriteString(_amountofBlueFile, _activeBlueAI.Count.ToString());
             WriteString(_amountofRedFile, _activeRedAI.Count.ToString());
-            WriteString(_speedRedFile, averageSpeedRed.ToString());
-            WriteString(_rangeBlueFile, averageRadiusBlue.ToString());
+
+            WriteString(_radiusBlueFile, RadiusBlue.ToString());
+            WriteString(_radiusRedFile, RadiusRed.ToString());
+
+            WriteString(_rangeBlueFile, RangeBlue.ToString());
+            WriteString(_rangeRedFile, RangeRed.ToString());
         }
         if (_activeBlueAI.Count > _activeRedAI.Count)
         {
@@ -243,8 +268,18 @@ public class GenerationManager : MonoBehaviour
             WriteString(_generationCountFile, generationCount.ToString());
             WriteString(_amountofBlueFile, _activeBlueAI.Count.ToString());
             WriteString(_amountofRedFile, _activeRedAI.Count.ToString());
-            WriteString(_speedRedFile, averageSpeedRed.ToString());
-            WriteString(_rangeBlueFile, averageRadiusBlue.ToString());
+
+            WriteString(_radiusBlueFile, RadiusBlue.ToString());
+            WriteString(_radiusRedFile, RadiusRed.ToString());
+
+            WriteString(_rangeBlueFile, RangeBlue.ToString());
+            WriteString(_rangeRedFile, RangeRed.ToString());
+
+            //WriteString(_speedRedFile, averageSpeedRed.ToString());
+            //WriteString(_speedBlueFile, averageSpeedBlue.ToString());
+
+            //WriteString(_rangeBlueFile, averageRadiusBlue.ToString());
+            //WriteString(_rangeRedFile, averageRadiusRed.ToString());
 
         }
         if (_activeBlueAI.Count == _activeRedAI.Count)
@@ -254,8 +289,13 @@ public class GenerationManager : MonoBehaviour
             WriteString(_generationCountFile, generationCount.ToString());
             WriteString(_amountofBlueFile, _activeBlueAI.Count.ToString());
             WriteString(_amountofRedFile, _activeRedAI.Count.ToString());
-            WriteString(_speedRedFile, averageSpeedRed.ToString());
-            WriteString(_rangeBlueFile, averageRadiusBlue.ToString());
+
+            WriteString(_radiusBlueFile, RadiusBlue.ToString());
+            WriteString(_radiusRedFile, RadiusRed.ToString());
+
+            WriteString(_rangeBlueFile, RangeBlue.ToString());
+            WriteString(_rangeRedFile, RangeRed.ToString());
+
         }
 
         GenerateObjects(_blueAIParents, _redAIParents);
