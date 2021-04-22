@@ -19,7 +19,7 @@ public class GenerationManager : MonoBehaviour
     [SerializeField] private string _amountofRedFile;
     [SerializeField] private string _amountofBlueFile;
     [SerializeField] private string _generationCountFile;
-    [SerializeField] private string _radiusRedFile;
+    [SerializeField] private string _speedRedFile;
     [SerializeField] private string _rangeBlueFile;
 
     [Space(10)]
@@ -224,6 +224,8 @@ public class GenerationManager : MonoBehaviour
         lastRedWinnerData = lastRedWinner.GetData();
         Debug.Log("Last winner red had: " + lastRedWinner.GetKills() + " kills!" + " Last winner blue had: " + lastBlueWinner.GetKills() + " kills!");
 
+        float averageSpeedRed = (lastRedWinner.wanderSpeed +lastRedWinner.followSpeed) / 2;
+        float averageRadiusBlue = (lastBlueWinner.attackRange + lastBlueWinner.checkingRadius) / 2;
         if (_activeBlueAI.Count < _activeRedAI.Count)
         {
             //red won
@@ -231,8 +233,8 @@ public class GenerationManager : MonoBehaviour
             WriteString(_generationCountFile, generationCount.ToString());
             WriteString(_amountofBlueFile, _activeBlueAI.Count.ToString());
             WriteString(_amountofRedFile, _activeRedAI.Count.ToString());
-            WriteString(_radiusRedFile, lastRedWinner.checkingRadius.ToString());
-            WriteString(_rangeBlueFile, lastBlueWinner.attackRange.ToString());
+            WriteString(_speedRedFile, averageSpeedRed.ToString());
+            WriteString(_rangeBlueFile, averageRadiusBlue.ToString());
         }
         if (_activeBlueAI.Count > _activeRedAI.Count)
         {
@@ -241,8 +243,8 @@ public class GenerationManager : MonoBehaviour
             WriteString(_generationCountFile, generationCount.ToString());
             WriteString(_amountofBlueFile, _activeBlueAI.Count.ToString());
             WriteString(_amountofRedFile, _activeRedAI.Count.ToString());
-            WriteString(_radiusRedFile, lastRedWinner.wanderSpeed.ToString());
-            WriteString(_rangeBlueFile, lastBlueWinner.followSpeed.ToString());
+            WriteString(_speedRedFile, averageSpeedRed.ToString());
+            WriteString(_rangeBlueFile, averageRadiusBlue.ToString());
 
         }
         if (_activeBlueAI.Count == _activeRedAI.Count)
@@ -252,8 +254,8 @@ public class GenerationManager : MonoBehaviour
             WriteString(_generationCountFile, generationCount.ToString());
             WriteString(_amountofBlueFile, _activeBlueAI.Count.ToString());
             WriteString(_amountofRedFile, _activeRedAI.Count.ToString());
-            WriteString(_radiusRedFile, lastRedWinner.wanderSpeed.ToString());
-            WriteString(_rangeBlueFile, lastBlueWinner.followSpeed.ToString());
+            WriteString(_speedRedFile, averageSpeedRed.ToString());
+            WriteString(_rangeBlueFile, averageRadiusBlue.ToString());
         }
 
         GenerateObjects(_blueAIParents, _redAIParents);
