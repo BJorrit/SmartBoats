@@ -128,7 +128,7 @@ MonoBehaviour:
   objectToFollow: {fileID: 0}
   followSpeed: 1
   wanderSpeed: 1
-  checkingRadius: 25
+  checkingRadius: 2
   attackRange: 2
   accuracy: 25
   kills: 0

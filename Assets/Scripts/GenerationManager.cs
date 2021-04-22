@@ -56,11 +56,6 @@ public class GenerationManager : MonoBehaviour
     [SerializeField, Tooltip("Initial count for the simulation. Used for the Prefabs naming.")]
     private int generationCount;
 
-    //[Space(10)]
-    //[Header("Prefab Saving")]
-    //[SerializeField]
-    //private string savePrefabsAt;
-
     /// <summary>
     /// Those variables are used mostly for debugging in the inspector.
     /// </summary>
@@ -105,30 +100,15 @@ public class GenerationManager : MonoBehaviour
         {
             StopSimulation();
         }
-
-        //if (_runningSimulation)
-        //{
-        //    if (_activeRedAI.Count == 0)
-        //    {
-        //        ++generationCount;
-        //        MakeNewGeneration();
-        //    }
-
-        //    if (_activeBlueAI.Count == 0)
-        //    {
-        //        ++generationCount;
-        //        MakeNewGeneration();
-        //    }
-        //}
     }
 
     /// <summary>
-    /// Generates boats and pirates using the parents list.
+    /// Generates blue and red AI's using the parents list.
     /// If no parents are used, then they are ignored and the boats/pirates are generated using the default prefab
     /// specified in their areas.
     /// </summary>
-    /// <param name="boatParents"></param>
-    /// <param name="pirateParents"></param>
+    /// <param name="blueAI"></param>
+    /// <param name="redAI"></param>
     public void GenerateObjects(AISystem[] blueAI = null, AISystem[] redAI = null)
     {
         GenerateRedAI(redAI);
@@ -136,9 +116,9 @@ public class GenerationManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Generates the list of pirates using the parents list. The parent list can be null and, if so, it will be ignored.
-    /// Newly created pirates will go under mutation (MutationChances and MutationFactor will be applied).
-    /// Newly create agents will be Awaken (calling AwakeUp()).
+    /// Generates the list of blue AI's using the parents list. The parent list can be null and, if so, it will be ignored.
+    /// Newly created blue AI's will go under mutation (MutationChances and MutationFactor will be applied).
+    /// Newly create blue AI's will be Awaken (calling AwakeUp()).
     /// </summary>
     /// <param name="_blueAIParents"></param>
     private void GenerateBlueAI(AISystem[] BlueAIParents)
@@ -164,9 +144,9 @@ public class GenerationManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Generates the list of boats using the parents list. The parent list can be null and, if so, it will be ignored.
-    /// Newly created boats will go under mutation (MutationChances and MutationFactor will be applied).
-    /// /// Newly create agents will be Awaken (calling AwakeUp()).
+    /// Generates the list of red AI's using the parents list. The parent list can be null and, if so, it will be ignored.
+    /// Newly created red AI's will go under mutation (MutationChances and MutationFactor will be applied).
+    /// Newly create red AI's will be Awaken (calling AwakeUp()).
     /// </summary>
     /// <param name="RedAIParents"></param>
     private void GenerateRedAI(AISystem[] RedAIParents)
@@ -192,10 +172,9 @@ public class GenerationManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Creates a new generation by using GenerateBoxes and GenerateBoats/Pirates.
+    /// Creates a new generation by using GenerateBlueAI and GenerateRedAI.
     /// Previous generations will be removed and the best parents will be selected and used to create the new generation.
-    /// The best parents (top 1) of the generation will be stored as a Prefab in the [savePrefabsAt] folder. Their name
-    /// will use the [generationCount] as an identifier.
+    /// The best parents (top 1) of the generation will have some data stored in .txt files which can later be used to process in Excel.
     /// </summary>
     public void MakeNewGeneration()
     {
@@ -255,11 +234,11 @@ public class GenerationManager : MonoBehaviour
             WriteString(_amountofBlueFile, _activeBlueAI.Count.ToString());
             WriteString(_amountofRedFile, _activeRedAI.Count.ToString());
 
-            WriteString(_radiusBlueFile, RadiusBlue.ToString());
-            WriteString(_radiusRedFile, RadiusRed.ToString());
+            WriteString(_speedRedFile, averageSpeedRed.ToString());
+            WriteString(_speedBlueFile, averageSpeedBlue.ToString());
 
-            WriteString(_rangeBlueFile, RangeBlue.ToString());
-            WriteString(_rangeRedFile, RangeRed.ToString());
+            WriteString(_rangeBlueFile, averageRadiusBlue.ToString());
+            WriteString(_rangeRedFile, averageRadiusRed.ToString());
         }
         if (_activeBlueAI.Count > _activeRedAI.Count)
         {
@@ -269,17 +248,17 @@ public class GenerationManager : MonoBehaviour
             WriteString(_amountofBlueFile, _activeBlueAI.Count.ToString());
             WriteString(_amountofRedFile, _activeRedAI.Count.ToString());
 
-            WriteString(_radiusBlueFile, RadiusBlue.ToString());
-            WriteString(_radiusRedFile, RadiusRed.ToString());
+            //WriteString(_radiusBlueFile, RadiusBlue.ToString());
+            //WriteString(_radiusRedFile, RadiusRed.ToString());
 
-            WriteString(_rangeBlueFile, RangeBlue.ToString());
-            WriteString(_rangeRedFile, RangeRed.ToString());
+            //WriteString(_rangeBlueFile, RangeBlue.ToString());
+            //WriteString(_rangeRedFile, RangeRed.ToString());
 
-            //WriteString(_speedRedFile, averageSpeedRed.ToString());
-            //WriteString(_speedBlueFile, averageSpeedBlue.ToString());
+            WriteString(_speedRedFile, averageSpeedRed.ToString());
+            WriteString(_speedBlueFile, averageSpeedBlue.ToString());
 
-            //WriteString(_rangeBlueFile, averageRadiusBlue.ToString());
-            //WriteString(_rangeRedFile, averageRadiusRed.ToString());
+            WriteString(_rangeBlueFile, averageRadiusBlue.ToString());
+            WriteString(_rangeRedFile, averageRadiusRed.ToString());
 
         }
         if (_activeBlueAI.Count == _activeRedAI.Count)
@@ -290,11 +269,11 @@ public class GenerationManager : MonoBehaviour
             WriteString(_amountofBlueFile, _activeBlueAI.Count.ToString());
             WriteString(_amountofRedFile, _activeRedAI.Count.ToString());
 
-            WriteString(_radiusBlueFile, RadiusBlue.ToString());
-            WriteString(_radiusRedFile, RadiusRed.ToString());
+            WriteString(_speedRedFile, averageSpeedRed.ToString());
+            WriteString(_speedBlueFile, averageSpeedBlue.ToString());
 
-            WriteString(_rangeBlueFile, RangeBlue.ToString());
-            WriteString(_rangeRedFile, RangeRed.ToString());
+            WriteString(_rangeBlueFile, averageRadiusBlue.ToString());
+            WriteString(_rangeRedFile, averageRadiusRed.ToString());
 
         }
 
@@ -302,7 +281,7 @@ public class GenerationManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Starts a new simulation. It does not call MakeNewGeneration. It calls both GenerateBoxes and GenerateObjects and
+    /// Starts a new simulation. It does not call MakeNewGeneration. It calls both GenerateBlueAI and GenerateRedAI and
     /// then sets the _runningSimulation flag to true.
     /// </summary>
     public void StartSimulation()
@@ -324,7 +303,7 @@ public class GenerationManager : MonoBehaviour
 
     /// <summary>
     /// Stops the count for the simulation. It also removes null (Destroyed) boats from the _activeBoats list and sets
-    /// all boats and pirates to Sleep.
+    /// all blue and red AI to sleep.
     /// </summary>
     public void StopSimulation()
     {
@@ -348,12 +327,5 @@ public class GenerationManager : MonoBehaviour
         StreamWriter writer = new StreamWriter(path, true);
         writer.WriteLine(info);
         writer.Close();
-
-        ////Re-import the file to update the reference in the editor
-        //AssetDatabase.ImportAsset(path);
-        //TextAsset asset = Resources.Load(path);
-
-        ////Print the text from the file
-        //Debug.Log(asset.text);
     }
 }

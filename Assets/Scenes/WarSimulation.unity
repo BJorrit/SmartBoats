@@ -869,12 +869,12 @@ MonoBehaviour:
   _amountofRedFile: RedLeftFile.txt
   _amountofBlueFile: BlueLeftFile.txt
   _generationCountFile: GenerationCountFile.txt
-  _speedRedFile: SpeedAverageRedFile.txt
-  _speedBlueFile: SpeedAverageBlueFile.txt
-  _rangeBlueFile: RangeBlueFile.txt
-  _rangeRedFile: RangeRedFile.txt
-  _radiusBlueFile: RadiusBlueFile.txt
-  _radiusRedFile: RadiusRedFile.txt
+  _speedRedFile: AverageSpeedRed.txt
+  _speedBlueFile: AverageSpeedBlue.txt
+  _rangeBlueFile: AverageRangeBlue.txt
+  _rangeRedFile: AverageRangeRed.txt
+  _radiusBlueFile: 
+  _radiusRedFile: 
   mutationFactor: 3.5
   mutationChance: 35
   redArmySize: 1
